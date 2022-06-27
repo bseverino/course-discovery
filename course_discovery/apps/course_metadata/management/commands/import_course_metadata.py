@@ -11,13 +11,15 @@ from django.db.models.signals import post_delete, post_save
 from course_discovery.apps.api.cache import api_change_receiver, set_api_timestamp
 from course_discovery.apps.core.models import Partner
 from course_discovery.apps.course_metadata.data_loaders.csv_loader import CSVDataLoader
+from course_discovery.apps.course_metadata.models import CSVDataLoaderConfiguration
 from course_discovery.apps.course_metadata.signals import connect_api_change_receiver
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Import course and course run information from a CSV available on a provided csv path.'
+    help = 'Import course and course run information from a CSV available uploaded through ' \
+           'CSVDataLoaderConfiguration in django admin.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -26,19 +28,13 @@ class Command(BaseCommand):
             default='edx',
             type=str,
         )
-        parser.add_argument(
-            '--csv_path',
-            help='Path to the CSV file',
-            type=str,
-            required=True
-        )
 
     def handle(self, *args, **options):
         """
-        Example usage: ./manage.py import_course_metadata --partner_code=edx --csv_path=test.csv
+        Example usage: ./manage.py import_course_metadata
         """
         partner_short_code = options.get('partner_code')
-        csv_path = options.get('csv_path')
+        csv_path = CSVDataLoaderConfiguration.current().csv_file.path
         try:
             partner = Partner.objects.get(short_code=partner_short_code)
         except Partner.DoesNotExist:

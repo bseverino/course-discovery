@@ -1,10 +1,12 @@
 """
 Unit tests for import_course_metadata management command.
 """
-from tempfile import NamedTemporaryFile
+import csv
+import json
 from unittest import mock
 
 import responses
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import CommandError, call_command
 from testfixtures import LogCapture
 
@@ -13,7 +15,7 @@ from course_discovery.apps.core.tests.factories import USER_PASSWORD, UserFactor
 from course_discovery.apps.course_metadata.data_loaders.csv_loader import CSVDataLoader
 from course_discovery.apps.course_metadata.data_loaders.tests import mock_data
 from course_discovery.apps.course_metadata.data_loaders.tests.mixins import CSVLoaderMixin
-from course_discovery.apps.course_metadata.models import Course, CourseRun
+from course_discovery.apps.course_metadata.models import Course, CourseRun, CSVDataLoaderConfiguration
 
 LOGGER_PATH = 'course_discovery.apps.course_metadata.management.commands.import_course_metadata'
 
@@ -55,20 +57,27 @@ class TestImportCourseMetadata(CSVLoaderMixin, OAuth2Mixin, APITestCase):
         """
         Test that the command raises CommandError if no partner is present against the provided short code.
         """
+        content = ','.join(list(mock_data.VALID_COURSE_AND_COURSE_RUN_CSV_DICT)) + '\n'
+        content += ','.join(f'"{key}"' for key in list(mock_data.VALID_COURSE_AND_COURSE_RUN_CSV_DICT.values())) + '\n'
+
+        csv_file = SimpleUploadedFile(
+            name='test.csv',
+            content=content.encode('utf-8'),
+            content_type='text/csv'
+        )
+        _ = CSVDataLoaderConfiguration.objects.create(enabled=True, csv_file=csv_file)
         with self.assertRaisesMessage(CommandError, 'Unable to locate partner with code invalid-partner-code'):
             call_command(
-                'import_course_metadata', '--partner_code', 'invalid-partner-code', '--csv_path', ''
+                'import_course_metadata', '--partner_code', 'invalid-partner-code',
             )
 
-    def test_invalid_csv_path(self, jwt_decode_patch):  # pylint: disable=unused-argument
+    def test_no_csv_file(self, jwt_decode_patch):  # pylint: disable=unused-argument
         """
-        Test that the command raises CommandError if an invalid csv path is provided.
+        Test that the command raises ValueError if no csv file is provided.
         """
-        with self.assertRaisesMessage(
-                CommandError, 'CSV loader import could not be completed due to unexpected errors.'
-        ):
+        with self.assertRaisesMessage(ValueError, "The 'csv_file' attribute has no file associated with it."):
             call_command(
-                'import_course_metadata', '--partner_code', self.partner.short_code, '--csv_path', 'no-path'
+                'import_course_metadata', '--partner_code', self.partner.short_code,
             )
 
     @responses.activate
@@ -81,35 +90,42 @@ class TestImportCourseMetadata(CSVLoaderMixin, OAuth2Mixin, APITestCase):
         self.mock_ecommerce_publication(self.partner)
         _, image_content = self.mock_image_response()
 
-        with NamedTemporaryFile() as csv:
-            csv = self._write_csv(csv, [mock_data.VALID_COURSE_AND_COURSE_RUN_CSV_DICT])
+        content = ','.join(list(mock_data.VALID_COURSE_AND_COURSE_RUN_CSV_DICT)) + '\n'
+        content += ','.join(f'"{key}"' for key in list(mock_data.VALID_COURSE_AND_COURSE_RUN_CSV_DICT.values())) + '\n'
 
-            with LogCapture(LOGGER_PATH) as log_capture:
-                with mock.patch.object(
-                        CSVDataLoader,
-                        '_call_course_api',
-                        self.mock_call_course_api
-                ):
-                    call_command(
-                        'import_course_metadata', '--csv_path', csv.name, '--partner_code', self.partner.short_code
+        csv_file = SimpleUploadedFile(
+            name='test.csv',
+            content=content.encode('utf-8'),
+            content_type='text/csv'
+        )
+        _ = CSVDataLoaderConfiguration.objects.create(enabled=True, csv_file=csv_file)
+
+        with LogCapture(LOGGER_PATH) as log_capture:
+            with mock.patch.object(
+                    CSVDataLoader,
+                    '_call_course_api',
+                    self.mock_call_course_api
+            ):
+                call_command(
+                    'import_course_metadata', '--partner_code', self.partner.short_code
+                )
+                log_capture.check_present(
+                    (
+                        LOGGER_PATH,
+                        'INFO',
+                        'Starting CSV loader import flow for partner {}'.format(self.partner.short_code)
                     )
-                    log_capture.check_present(
-                        (
-                            LOGGER_PATH,
-                            'INFO',
-                            'Starting CSV loader import flow for partner {}'.format(self.partner.short_code)
-                        )
-                    )
-                    log_capture.check_present(
-                        (LOGGER_PATH, 'INFO', 'CSV loader import flow completed.')
-                    )
+                )
+                log_capture.check_present(
+                    (LOGGER_PATH, 'INFO', 'CSV loader import flow completed.')
+                )
 
-                    assert Course.everything.count() == 1
-                    assert CourseRun.everything.count() == 1
+                assert Course.everything.count() == 1
+                assert CourseRun.everything.count() == 1
 
-                    course = Course.everything.get(key=self.COURSE_KEY, partner=self.partner)
-                    course_run = CourseRun.everything.get(course=course)
+                course = Course.everything.get(key=self.COURSE_KEY, partner=self.partner)
+                course_run = CourseRun.everything.get(course=course)
 
-                    assert course.image.read() == image_content
-                    self._assert_course_data(course, self.BASE_EXPECTED_COURSE_DATA)
-                    self._assert_course_run_data(course_run, self.BASE_EXPECTED_COURSE_RUN_DATA)
+                assert course.image.read() == image_content
+                self._assert_course_data(course, self.BASE_EXPECTED_COURSE_DATA)
+                self._assert_course_run_data(course_run, self.BASE_EXPECTED_COURSE_RUN_DATA)

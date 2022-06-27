@@ -25,7 +25,7 @@ authlib==1.0.0rc1
     # via
     #   -c requirements/constraints.txt
     #   simple-salesforce
-backoff==2.0.1
+backoff==2.1.2
     # via -r requirements/base.in
 beautifulsoup4==4.11.1
     # via
@@ -33,9 +33,9 @@ beautifulsoup4==4.11.1
     #   taxonomy-connector
 billiard==3.6.4.0
     # via celery
-boto3==1.23.10
+boto3==1.24.14
     # via django-ses
-botocore==1.26.10
+botocore==1.27.14
     # via
     #   boto3
     #   s3transfer
@@ -45,7 +45,7 @@ celery==5.2.7
     # via
     #   -c requirements/constraints.txt
     #   taxonomy-connector
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/production.in
     #   elasticsearch
@@ -96,6 +96,7 @@ django==3.2.13
     #   django-admin-sortable2
     #   django-appconf
     #   django-choices
+    #   django-config-models
     #   django-contrib-comments
     #   django-cors-headers
     #   django-crum
@@ -137,9 +138,11 @@ django-compressor==4.0
     # via
     #   -r requirements/base.in
     #   django-libsass
+django-config-models==2.3.0
+    # via -r requirements/base.in
 django-contrib-comments==2.2.0
     # via -r requirements/base.in
-django-cors-headers==3.12.0
+django-cors-headers==3.13.0
     # via -r requirements/base.in
 django-crum==0.7.9
     # via edx-django-utils
@@ -155,7 +158,7 @@ django-elasticsearch-dsl-drf==0.22.4
     # via -r requirements/base.in
 django-extensions==3.1.5
     # via -r requirements/base.in
-django-filter==21.1
+django-filter==22.1
     # via -r requirements/base.in
 django-fsm==2.8.0
     # via -r requirements/base.in
@@ -173,7 +176,7 @@ django-object-actions==4.0.0
     # via -r requirements/base.in
 django-parler==2.3
     # via -r requirements/base.in
-django-ses==3.0.1
+django-ses==3.1.0
     # via
     #   -r requirements/production.in
     #   taxonomy-connector
@@ -200,16 +203,17 @@ django-taggit==3.0.0
     #   django-taggit-autosuggest
 django-taggit-autosuggest==0.3.8
     # via -r requirements/base.in
-django-waffle==2.4.1
+django-waffle==2.5.0
     # via
     #   -r requirements/base.in
     #   edx-django-utils
     #   edx-drf-extensions
-django-webpack-loader==1.5.0
+django-webpack-loader==1.6.0
     # via -r requirements/base.in
 djangorestframework==3.13.1
     # via
     #   -r requirements/base.in
+    #   django-config-models
     #   django-elasticsearch-dsl-drf
     #   djangorestframework-csv
     #   drf-extensions
@@ -247,6 +251,7 @@ edx-django-sites-extensions==4.0.0
 edx-django-utils==5.0.0
     # via
     #   -r requirements/base.in
+    #   django-config-models
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   taxonomy-connector
@@ -297,7 +302,7 @@ itypes==1.2.0
     # via coreapi
 jinja2==3.1.2
     # via coreschema
-jmespath==1.0.0
+jmespath==1.0.1
     # via
     #   boto3
     #   botocore
@@ -307,7 +312,7 @@ kombu==5.2.4
     # via celery
 libsass==0.21.0
     # via django-libsass
-lxml==4.8.0
+lxml==4.9.0
     # via
     #   -r requirements/base.in
     #   zeep
@@ -317,7 +322,7 @@ markupsafe==2.1.1
     # via jinja2
 mysqlclient==2.1.0
     # via -r requirements/production.in
-newrelic==7.10.0.175
+newrelic==7.12.0.176
     # via
     #   -r requirements/production.in
     #   edx-django-utils
@@ -391,9 +396,9 @@ pyyaml==6.0
     #   edx-django-release-util
 rcssmin==1.1.0
     # via django-compressor
-redis==4.3.1
+redis==4.3.3
     # via -r requirements/base.in
-requests==2.27.1
+requests==2.28.0
     # via
     #   -r requirements/base.in
     #   algoliasearch
@@ -421,7 +426,7 @@ ruamel-yaml==0.17.21
     # via drf-yasg
 ruamel-yaml-clib==0.2.6
     # via ruamel-yaml
-s3transfer==0.5.2
+s3transfer==0.6.0
     # via boto3
 semantic-version==2.10.0
     # via edx-drf-extensions
@@ -453,7 +458,7 @@ social-auth-app-django==5.0.0
     # via
     #   -r requirements/base.in
     #   edx-auth-backends
-social-auth-core==4.2.0
+social-auth-core==4.3.0
     # via
     #   edx-auth-backends
     #   social-auth-app-django

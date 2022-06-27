@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytz
 import requests
 import waffle  # lint-amnesty, pylint: disable=invalid-django-waffle-import
+from config_models.models import ConfigurationModel
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -3228,6 +3229,17 @@ class CourseUrlRedirect(AbstractValueModel):
         unique_together = (
             ('partner', 'value')
         )
+
+
+class CSVDataLoaderConfiguration(ConfigurationModel):
+    """
+    Configuration to store a csv file that will be used in import_course_metadata.
+    """
+    csv_file = models.FileField(
+        validators=[FileExtensionValidator(allowed_extensions=['csv'])],
+        help_text=_("It expects the data will be provided in a csv file format "
+                    "with first row containing all the headers.")
+    )
 
 
 class BackpopulateCourseTypeConfig(SingletonModel):
